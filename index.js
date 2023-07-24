@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app  = express();
 const port = process.env.PORT || 5000;
@@ -26,12 +26,39 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 const collegeCollection = client.db('collegService').collection('colleges')
+const admissionCollection = client.db('collegService').collection('admission')
 
 app.get('/colleges', async(req, res)=>{
      const cursor = collegeCollection.find();
      const result = await cursor.toArray();
      res.send(result);
 })
+app.get("/colleges/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await collegeCollection.findOne(query);
+  res.send(result);
+});
+app.get("/3colleges", async (req, res) => {
+  const cursor = collegeCollection.find().limit(3);
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
+app.post("/admission", async (req, res) => {
+  const admissionInfo = req.body;
+  const result = await admissionCollection.insertOne(admissionInfo);
+  res.send(result);
+});
+
+app.get("/myCollege", async (req, res) => {
+  const candidateEmail= req.query.email;
+  const query = { candidateEmail };
+  const cursor = admissionCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
